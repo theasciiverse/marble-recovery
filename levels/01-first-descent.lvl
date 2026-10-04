@@ -1,0 +1,20 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: rolling, a ramp, a tilted bridge, a safe drop, a descent to the socket.
+name: First Descent
+time: 75
+route: 2,2 8,2 8,4 8,5 9,7 8,10 12,10 15,11
+grid:
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+.  ES E  E  E> D> C> B  B  B  .  .  .  .  .  .  .  .
+.  E  E  E  E> D> C> B  B  B  .  .  .  .  .  .  .  .
+.  E  E  E  .  .  .  B  B  B  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  B  .  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  B> A  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  B> A  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  B> A  .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  .  B>v Av .  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  8  8  8  8  .  .  .  .  .  .  .
+.  .  .  .  .  .  .  8  8  8  8  8> 7> 6> 5  5  5  .
+.  .  .  .  .  .  .  8  8  8  8  8> 7> 6> 5  5G 5  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  5  5  5  .
+.  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .

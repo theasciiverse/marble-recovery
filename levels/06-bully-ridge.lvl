@@ -1,0 +1,25 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: bullies. Iron marbles, heavier than yours, that roll straight at you and
+# knock you flying. They do not care about edges: step aside at the last moment and
+# let them roll off, or lead them round the hole in the plaza.
+name: Bully Ridge
+time: 70
+bully: 11,1 chase 3
+bully: 11,7 chase 3.5
+bully: 15,4 chase 3.5
+route: 3,1 6,1 9,1 11,2 11,4 10,6 10,8 13,8 14,9 14,11 15,12
+grid:
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   CS  C   C   C>  B   B   B   B>  A   A   A   A   .   .   .   .   .
+.   C   C   C   C>  B   B   B   B>  A   A   A   A   .   .   .   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   A   A   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   A   A   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   .   .   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   .   A   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   A   A   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   A   A   A   A   A   A   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   Av  Av  .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   9v  9v  .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   8   8   8   8   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   8   8   8G  8   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .

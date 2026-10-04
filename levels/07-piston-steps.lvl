@@ -1,0 +1,17 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: pistons. The socket is up high and the only way up is three lifts, each
+# out of step with the last. Roll on when one is down level with you, ride it up,
+# roll off at the top. A gulper walks the near side of the last landing: wait for
+# the last lift in the far corner, not on the straight line.
+name: Piston Steps
+time: 70
+piston: 4 1.5 0.45
+eater: 7,1 9,1 speed 0.8 chase 1.25
+route: 2,2 3,2 5,2 6,2 7,2 9,2 10,2 12,2
+route: 2,2 3,2 5,2 6,2 7,3 9,3 w3.5 10,3 12,2
+grid:
+.   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   4   4   4|  7   7   7|  A   A   A   A|  D   D   D
+.   4S  4   4|  7   7   7|  A   A   A   A|  D   DG  D
+.   4   4   4|  7   7   7|  A   A   A   A|  D   D   D
+.   .   .   .   .   .   .   .   .   .   .   .   .   .

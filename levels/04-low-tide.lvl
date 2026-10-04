@@ -1,0 +1,17 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: tidal slime. The flat floods and drains in a wave that rolls toward you;
+# dry ground bubbles just before it floods. A straight dash drowns: wait on the
+# start and on each island for the tide to turn. The gutters either side never drain.
+name: Low Tide
+time: 70
+tide: 8 0.45 -0.2
+route: 2,3 w1 4,3 7,3 10,3 w4 13,3 15,3 w6 18,3 21,3
+grid:
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   .   .   .   .   6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  .   .   .
+.   8   8   8>  7>  6%  6%  6%  6%  6%  6   6   6%  6%  6%  6%  6%  6%  6%  6%  6   6   .
+.   8S  8   8>  7>  6%  6%  6%  6%  6%  6   6   6%  6%  6%  6   6%  6%  6%  6%  6   6G  .
+.   8   8   8>  7>  6%  6%  6%  6%  6%  6   6   6%  6%  6%  6%  6%  6%  6%  6%  6   6   .
+.   .   .   .   .   6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  6~  .   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .

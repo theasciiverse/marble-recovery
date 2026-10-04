@@ -1,0 +1,27 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Everything so far at once: a long switchback descent, a gulper pacing the far edge
+# of the first landing (brake, or meet it), a slime chicane on the last bridge, then a two-unit drop to the socket.
+name: Switchback Spire
+time: 70
+eater: 10,1 10,3 speed 0.8 chase 1.3
+route: 2,2 5,2 7,2 7,4 7,7 7,8 8,9 12,9 13,9 14,11 13,12 14,13 14,14 14,15 14,16
+grid:
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   QS  Q   Q>  P>  O>  N>  M   M   M   M   .   .   .   .   .   .
+.   Q   Q   Q>  P>  O>  N>  M   M   M   M   .   .   .   .   .   .
+.   .   .   .   .   .   .   M   M   M   M   .   .   .   .   .   .
+.   .   .   .   .   .   .   Mv  Mv  .   .   .   .   .   .   .   .
+.   .   .   .   .   .   .   Lv  Lv  .   .   .   .   .   .   .   .
+.   .   .   .   .   .   .   Kv  Kv  .   .   .   .   .   .   .   .
+.   .   .   .   .   .   .   Jv  Jv  .   .   .   .   .   .   .   .
+.   .   .   .   .   .   I   I   I   I>  H>  G>  F>  E   E   .   .
+.   .   .   .   .   .   I~  I   I   I>  H>  G>  F>  E   E   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   E   E   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   E~  E   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   E   E~  .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   E~  E   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   E   E   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   A   A   A   A   .
+.   .   .   .   .   .   .   .   .   .   .   .   A   A   AG  A   .
+.   .   .   .   .   .   .   .   .   .   .   .   A   A   A   A   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .

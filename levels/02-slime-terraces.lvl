@@ -1,0 +1,28 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: slime. It drags, weakens your push, and dissolves a marble that lingers.
+name: Slime Terraces
+time: 70
+route: 3,3 3,5 4,6 5,7 5,9 2,9 1,11 1,12 2,13 3,14 5,14 6,15 6,17 6,19
+grid:
+.   .   .   .   .   .   .   .   .   .
+.   KS  K   K   K   K   .   .   .   .
+.   K   K   K   K   K   .   .   .   .
+.   K~  K~  K   K   K~  .   .   .   .
+.   .   .   Kv  Kv  .   .   .   .   .
+.   .   .   Jv  Jv  .   .   .   .   .
+.   I~  I~  I   I   I   I~  .   .   .
+.   I~  I~  I~  I~  I   I   .   .   .
+.   I   I   I~  I~  I   I~  .   .   .
+.   I   I   I   I   I   I~  .   .   .
+.   Iv  Iv  .   .   .   .   .   .   .
+.   Hv  Hv  .   .   .   .   .   .   .
+.   G   G   G~  G~  G~  G   G   .   .
+.   G~  G   G   G~  G   G   G~  .   .
+.   G~  G~  G   G   G   G~  G   .   .
+.   G~  G~  G~  G~  G   G   G   .   .
+.   .   .   .   .   .   Gv  Gv  .   .
+.   .   .   .   .   .   Fv  Fv  .   .
+.   .   .   .   .   E   E   E   E   .
+.   .   .   .   .   E   EG  E   E   .
+.   .   .   .   .   E   E   E   E   .
+.   .   .   .   .   .   .   .   .   .
