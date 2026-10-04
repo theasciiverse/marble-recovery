@@ -32,13 +32,18 @@ impl Progress {
         Progress { best, path }
     }
 
+    /// Older files keyed levels by file name with its order number ("07-piston-steps");
+    /// those keys are migrated to the stable id, keeping the better time if both exist.
     fn parse(text: &str) -> BTreeMap<String, f32> {
-        text.lines()
-            .filter_map(|l| {
-                let (id, t) = l.trim().split_once(' ')?;
-                Some((id.to_string(), t.trim().parse().ok()?))
-            })
-            .collect()
+        let mut best = BTreeMap::new();
+        for l in text.lines() {
+            let Some((id, t)) = l.trim().split_once(' ') else { continue };
+            let Ok(t) = t.trim().parse::<f32>() else { continue };
+            let id = crate::levels::strip_order(id).to_string();
+            let e = best.entry(id).or_insert(t);
+            *e = e.min(t);
+        }
+        best
     }
 
     pub fn best(&self, id: &str) -> Option<f32> {
@@ -73,11 +78,15 @@ mod tests {
     #[test]
     fn records_only_improve_and_round_trip() {
         let mut p = Progress { best: BTreeMap::new(), path: None };
-        assert!(p.record("01-first-descent", 30.0));
-        assert!(!p.record("01-first-descent", 31.0));
-        assert!(p.record("01-first-descent", 27.5));
+        assert!(p.record("first-descent", 30.0));
+        assert!(!p.record("first-descent", 31.0));
+        assert!(p.record("first-descent", 27.5));
         let text: String = p.best.iter().map(|(id, t)| format!("{id} {t:.3}\n")).collect();
-        assert_eq!(Progress::parse(&text).get("01-first-descent"), Some(&27.5));
+        assert_eq!(Progress::parse(&text).get("first-descent"), Some(&27.5));
         assert!(Progress::parse("garbage\n\nx y\n").is_empty());
+        // files from before ids were stable carry the order number
+        let old = Progress::parse("07-piston-steps 36.631\n08-switchback-spire 12.5\nswitchback-spire 13.0\n");
+        assert_eq!(old.get("piston-steps"), Some(&36.631));
+        assert_eq!(old.get("switchback-spire"), Some(&12.5), "the better of old and new is kept");
     }
 }

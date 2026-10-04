@@ -1,0 +1,29 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: ice. Almost no grip: you coast, and steering takes a long time to bite.
+# Grippy pads at each corner are the only places you can stop.
+name: Thin Ice
+time: 75
+theme: madness
+story: Nothing here holds you back.
+story: That is the problem. Steer early, and gently.
+route: 2,2 10,2 10,4 10,10 9,10 3,10 2,12 2,16 2,17
+grid:
+.    .    .    .    .    .    .    .    .    .    .    .    .
+.    CS   C    C*   C*   C*   C*   C*   C*   C*   C    C    .
+.    C    C    C*   C*   C*   C*   C*   C*   C*   C    C    .
+.    .    .    .    .    .    .    .    .    .    Cv*  Cv*  .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    .    .    .    .    .    .    .    .    B*   B*   .
+.    .    B    B    B*   B*   B*   B*   B*   B*   B    B    .
+.    .    B    B    B*   B*   B*   B*   B*   B*   B    B    .
+.    .    B*   B*   .    .    .    .    .    .    .    .    .
+.    .    B*   B*   .    .    .    .    .    .    .    .    .
+.    .    B*   B*   .    .    .    .    .    .    .    .    .
+.    .    B*   B*   .    .    .    .    .    .    .    .    .
+.    B    B    B    B    .    .    .    .    .    .    .    .
+.    B    BG   B    B    .    .    .    .    .    .    .    .
+.    .    .    .    .    .    .    .    .    .    .    .    .

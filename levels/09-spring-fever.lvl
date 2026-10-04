@@ -1,0 +1,16 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: springs. Each terrace is too high to roll up; the amber rings throw you.
+# Hold toward the wall while you are in the air, or you just bounce in place.
+name: Spring Fever
+time: 70
+theme: madness
+spring: 9.5
+story: Some floors do not want you at all.
+story: They will throw you somewhere higher, if you let them. Just never back down.
+route: 2,2 4,2 w0.25 6,2 7,2 9,2 10,2 12,2
+grid:
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .
+.    4    4    4    4    8    8    8    C    C    C    G    G    G    .
+.    4S   4    4    4!   8    8    8!   C    C    C!   G    GG   G    .
+.    4    4    4    4    8    8    8    C    C    C    G    G    G    .
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .

@@ -2,6 +2,9 @@
 # Teaches: slime. It drags, weakens your push, and dissolves a marble that lingers.
 name: Slime Terraces
 time: 70
+theme: classic
+story: The second one went somewhere green and patient.
+story: Slime does not chase you. It just waits for you to stop.
 route: 3,3 3,5 4,6 5,7 5,9 2,9 1,11 1,12 2,13 3,14 5,14 6,15 6,17 6,19
 grid:
 .   .   .   .   .   .   .   .   .   .

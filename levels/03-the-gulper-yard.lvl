@@ -3,6 +3,10 @@
 # strays into reach, but never leave their own level: a ledge is a safe wall.
 name: The Gulper Yard
 time: 60
+theme: classic
+story: Something out here is hungry.
+story: Gulpers mean no harm. They simply cannot tell a marble from a snack.
+story: They never leave their own ground, though. Remember that.
 eater: 6,4 12,4 speed 1.3
 eater: 10,1 10,8 speed 1.0 chase 2.2
 eater: 12,7 chase 1.6

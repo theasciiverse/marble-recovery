@@ -13,6 +13,12 @@
 //! bully: 5,5 chase 4                    # an iron marble that rolls at you
 //! tide: 5 0.5 0.25                      # tidal slime: period, wet fraction, lag per cell
 //! piston: 4 1.5 0.45                    # pistons: period, rise, lag per cell
+//! gravity: 7                            # this world's pull (default 18)
+//! spring: 9.5                           # launch speed of `!` cells (default 9.5)
+//! theme: madness                        # palette: classic, madness, dawn
+//! act: Act II: The Madness              # shown on the story card when an act begins
+//! story: The first line of the card.    # one line each, shown before the level
+//! ending: ...                           # lines for the card after the last level
 //! route: 2,2 4,5 w2 6,5 ...             # a known-good line (w2 = wait 2 s); tests play all
 //! grid:
 //! .  KS K  K~ ...
@@ -22,7 +28,9 @@
 //! `>` `<` `v` `^` slope down half a unit toward +x, -x, +y, -y (`}` `{` `V` `A` a whole
 //! unit), `S` start, `G` goal, `~` slime, `%` tidal slime (wet only part of each
 //! tide, rolling across the level as a wave), `|` piston (rises and falls by the
-//! `piston:` timing, from its written height up). `.` is void. `#` starts a comment.
+//! `piston:` timing, from its written height up), `*` ice (almost no grip), `!`
+//! spring (throws you up at the `spring:` speed). `.` is void. `#` starts a
+//! comment (so story text cannot contain `#`).
 
 use crate::math::V3;
 
@@ -37,6 +45,17 @@ pub enum Kind {
     Slime,
     Tidal,
     Piston,
+    Ice,
+    Spring,
+}
+
+/// A level's palette, by act: the arc from the classic look, through violet
+/// madness, to a warm dawn.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Theme {
+    Classic,
+    Madness,
+    Dawn,
 }
 
 /// Piston timing: each piston rises `rise` units above its written height and back
@@ -146,6 +165,13 @@ pub struct Level {
     pub bullies: Vec<BullySpec>,
     pub tide: Tide,
     pub piston: PistonTiming,
+    pub gravity: f32,
+    pub spring: f32,
+    pub theme: Theme,
+    /// The act this level opens, if it opens one (shown on its story card).
+    pub act: Option<String>,
+    pub story: Vec<String>,
+    pub ending: Vec<String>,
     /// Piston cells and their rest corner heights.
     pistons: Vec<(usize, usize, [f32; 4])>,
     /// Lines of cell centres a steering autopilot follows to the goal, one per
@@ -189,6 +215,12 @@ impl Level {
             bullies: Vec::new(),
             tide: Tide { period: 5.0, wet: 0.5, lag: 0.25 },
             piston: PistonTiming { period: 4.0, rise: 1.0, lag: 0.0 },
+            gravity: 18.0,
+            spring: 9.5,
+            theme: Theme::Classic,
+            act: None,
+            story: Vec::new(),
+            ending: Vec::new(),
             pistons: Vec::new(),
             routes: Vec::new(),
             tris: Vec::new(),
@@ -243,6 +275,19 @@ impl Level {
                     };
                     level.bullies.push(BullySpec { home, chase });
                 }
+                "gravity" => level.gravity = val.parse().map_err(|e| format!("gravity: {e}"))?,
+                "spring" => level.spring = val.parse().map_err(|e| format!("spring: {e}"))?,
+                "theme" => {
+                    level.theme = match val {
+                        "classic" => Theme::Classic,
+                        "madness" => Theme::Madness,
+                        "dawn" => Theme::Dawn,
+                        t => return Err(format!("unknown theme {t:?}")),
+                    }
+                }
+                "act" => level.act = Some(val.to_string()),
+                "story" => level.story.push(val.to_string()),
+                "ending" => level.ending.push(val.to_string()),
                 "piston" => {
                     let v: Vec<f32> = val.split_whitespace().map(str::parse).collect::<Result<_, _>>().map_err(|e| format!("piston: {e}"))?;
                     let [period, rise, lag] = v[..] else { return Err("piston: expected period rise lag".into()) };
@@ -306,6 +351,14 @@ impl Level {
                         }
                         '|' => {
                             c.kind = Kind::Piston;
+                            continue;
+                        }
+                        '*' => {
+                            c.kind = Kind::Ice;
+                            continue;
+                        }
+                        '!' => {
+                            c.kind = Kind::Spring;
                             continue;
                         }
                         _ => return Err(format!("bad modifier {m:?} at {x},{y}")),

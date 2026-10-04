@@ -4,6 +4,9 @@
 # start and on each island for the tide to turn. The gutters either side never drain.
 name: Low Tide
 time: 70
+theme: classic
+story: The tide here keeps its own time.
+story: Watch it breathe before you cross. Rushing is how marbles drown.
 tide: 8 0.45 -0.2
 route: 2,3 w1 4,3 7,3 10,3 w4 13,3 15,3 w6 18,3 21,3
 grid:

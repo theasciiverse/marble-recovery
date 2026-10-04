@@ -2,6 +2,11 @@
 # Teaches: rolling, a ramp, a tilted bridge, a safe drop, a descent to the socket.
 name: First Descent
 time: 75
+theme: classic
+act: Act I: Losing It
+story: They say you have lost your marbles.
+story: They are right. Twelve of them, rolled off into places that should not exist.
+story: Go and get them back, one at a time. Start with the easy one.
 route: 2,2 8,2 8,4 8,5 9,7 8,10 12,10 15,11
 grid:
 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .

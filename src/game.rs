@@ -7,7 +7,6 @@ use crate::math::{closest_on_tri, Rot, V3};
 use log::info;
 
 pub const RADIUS: f32 = 0.28;
-const GRAVITY: f32 = 18.0;
 /// Acceleration from full input, on the ground and in the air.
 const PUSH: f32 = 6.0;
 const AIR_PUSH: f32 = 2.5;
@@ -19,6 +18,10 @@ const BOUNCE_MIN: f32 = 2.5;
 /// An impact this hard (normal speed) shatters the marble, as in Marble Madness.
 pub const SHATTER_SPEED: f32 = 10.5;
 pub const STEP: f32 = 1.0 / 240.0;
+
+/// Ice: almost no grip, so little push and almost no drag; you coast.
+const ICE_PUSH: f32 = 0.3;
+const ICE_DRAG: f32 = 0.03;
 
 /// Slime: thick drag, weak push, and a marble left in it this long dissolves.
 const SLIME_DRAG: f32 = 3.2;
@@ -210,8 +213,9 @@ impl Game {
         let dt = STEP;
         self.clock += dt;
         self.level.set_clock(self.clock);
+        let gravity = self.level.gravity;
         self.particles.retain_mut(|p| {
-            p.vel.z -= GRAVITY * dt;
+            p.vel.z -= gravity * dt;
             p.pos += p.vel * dt;
             p.life -= dt;
             p.life > 0.0
@@ -545,15 +549,18 @@ fn knock(a: &mut Marble, ra: f32, ma: f32, b: &mut Marble, rb: f32, mb: f32) -> 
 fn roll(level: &Level, clock: f32, m: &mut Marble, radius: f32, push: V3, push_accel: f32, dt: f32) -> f32 {
     let (cx, cy) = (m.pos.x.floor() as i32, m.pos.y.floor() as i32);
     let in_slime = m.grounded && level.slime_at(cx, cy, clock);
+    let on_ice = m.grounded && level.cell(cx, cy).is_some_and(|c| c.kind == Kind::Ice);
     let accel = if !m.grounded {
         AIR_PUSH * push_accel / PUSH
     } else if in_slime {
         push_accel * SLIME_PUSH
+    } else if on_ice {
+        push_accel * ICE_PUSH
     } else {
         push_accel
     };
     m.vel += push * (accel * dt);
-    m.vel.z -= GRAVITY * dt;
+    m.vel.z -= level.gravity * dt;
     let speed = m.vel.len();
     if speed > MAX_SPEED {
         m.vel = m.vel * (MAX_SPEED / speed);
@@ -598,15 +605,27 @@ fn roll(level: &Level, clock: f32, m: &mut Marble, radius: f32, push: V3, push_a
     if m.grounded {
         let n = ground_n.norm();
         // a rolling solid sphere feels 5/7 of the slope's pull; give back the rest
-        let g = V3::new(0.0, 0.0, -GRAVITY);
+        let g = V3::new(0.0, 0.0, -level.gravity);
         let gt = g - n * g.dot(n);
         m.vel -= gt * (2.0 / 7.0 * dt);
         let vt = m.vel - n * m.vel.dot(n);
-        let drag = if in_slime { SLIME_DRAG } else { ROLL_DRAG };
+        let drag = if in_slime {
+            SLIME_DRAG
+        } else if on_ice {
+            ICE_DRAG
+        } else {
+            ROLL_DRAG
+        };
         m.vel -= vt * (drag * dt).min(1.0);
         let v = vt.len();
         if v > 1e-4 {
             m.rot.rotate(n.cross(vt).norm(), v * dt / radius);
+        }
+        // a spring under the ball throws it up (once per landing, not every step)
+        let (cx, cy) = (m.pos.x.floor() as i32, m.pos.y.floor() as i32);
+        if level.cell(cx, cy).is_some_and(|c| c.kind == Kind::Spring) && m.vel.z < level.spring * 0.5 {
+            m.vel.z = level.spring;
+            m.grounded = false;
         }
     }
     impact
@@ -856,5 +875,42 @@ mod tests {
             }
         }
         assert!(bad.is_empty(), "unsafe respawn points:\n{}", bad.join("\n"));
+    }
+
+    #[test]
+    fn ice_keeps_you_rolling_after_you_let_go() {
+        let coast = |grid: &str| {
+            let mut g = Game::new(level("", grid));
+            run(&mut g, 1.0, V3::new(1.0, 0.0, 0.0));
+            let v0 = g.marble.vel.x;
+            run(&mut g, 1.5, V3::ZERO);
+            g.marble.vel.x / v0
+        };
+        let dry = coast("4S 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4G");
+        let ice = coast("4S 4* 4* 4* 4* 4* 4* 4* 4* 4* 4* 4* 4* 4* 4* 4G");
+        assert!(ice > 0.9 && ice > dry + 0.2, "ice keeps {ice:.2} of its speed, dry ground {dry:.2}");
+    }
+
+    #[test]
+    fn a_spring_throws_the_marble_up() {
+        let mut g = Game::new(level("spring: 9", "4S! 4 4G"));
+        let mut top = 0.0f32;
+        for _ in 0..(1.5 / STEP) as usize {
+            g.step(V3::ZERO);
+            top = top.max(g.marble.pos.z);
+        }
+        // v^2 / 2g = 81 / 36: about 2.25 units above where it left the spring
+        assert!(top > 2.28 + 2.0, "only reached {top:.2}");
+        assert_eq!(g.falls, 0, "landing back on the spring is safe: {:?}", g.state);
+    }
+
+    #[test]
+    fn a_low_gravity_world_falls_slowly_and_softly() {
+        // the 4 unit drop that shatters at normal gravity is survivable here
+        let mut g = Game::new(level("gravity: 6", "CS C 4 4 4 4 4 4 4 4 4G"));
+        for _ in 0..(4.0 / STEP) as usize {
+            g.step(V3::new(1.0, 0.0, 0.0));
+            assert!(!matches!(g.state, State::Shattered(_)), "shattered in low gravity");
+        }
     }
 }

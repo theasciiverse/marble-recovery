@@ -57,7 +57,7 @@ fn cam_target(game: &Game) -> V3 {
 
 /// A fresh run of a level, with the ghost of the best run if one is saved.
 fn fresh(level_no: usize) -> (Game, Option<Ghost>) {
-    let (id, _) = levels::LEVELS[level_no];
+    let id = levels::id(level_no);
     let ghost = ghost::load(id).map(|pushes| Ghost::new(Game::new(levels::load(level_no)), pushes));
     if ghost.is_some() {
         info!("racing the ghost of the best run on {id}");
@@ -68,7 +68,32 @@ fn fresh(level_no: usize) -> (Game, Option<Ghost>) {
 enum Screen {
     /// Level select over an attract-mode run of the highlighted level.
     Title { pilot: Pilot, over: f32 },
+    /// A story card typing itself out before a level (or the ending after the last).
+    Card { ending: bool, typed: f32 },
     Play,
+}
+
+/// Characters per second for story cards.
+const TYPE_SPEED: f32 = 45.0;
+
+/// The lines a card shows: act heading, which marble this is, the story.
+fn card_lines(game: &Game, level_no: usize, ending: bool) -> Vec<(String, bool)> {
+    let n = levels::LEVELS.len();
+    let mut out = Vec::new();
+    if ending {
+        out.push(("All marbles recovered".to_string(), true));
+        out.push((String::new(), false));
+        out.extend(game.level.ending.iter().map(|l| (l.clone(), false)));
+        return out;
+    }
+    if let Some(act) = &game.level.act {
+        out.push((act.clone(), true));
+        out.push((String::new(), false));
+    }
+    out.push((format!("Marble {} of {n}: {}", level_no + 1, game.level.name), true));
+    out.push((String::new(), false));
+    out.extend(game.level.story.iter().map(|l| (l.clone(), false)));
+    out
 }
 
 fn run() -> io::Result<()> {
@@ -97,6 +122,13 @@ fn run() -> io::Result<()> {
         (game, ghost) = fresh(level_no);
     }
     let mut new_best = false;
+    // names and acts for the title list, read once
+    let names: Vec<(String, Option<String>)> = (0..levels::LEVELS.len())
+        .map(|i| {
+            let l = levels::load(i);
+            (l.name, l.act)
+        })
+        .collect();
     let mut recorded = false;
     let mut view = View::new();
     let mut input = Input::new(kitty);
@@ -133,6 +165,9 @@ fn run() -> io::Result<()> {
 
         // switching levels (title selection, n/p, or Enter after a win)
         let mut goto: Option<usize> = None;
+        let mut start_play = false;
+        let mut to_title = false;
+        let mut card: Option<bool> = None;
         match &mut screen {
             Screen::Title { .. } => {
                 let n = levels::LEVELS.len() as i32;
@@ -145,37 +180,49 @@ fn run() -> io::Result<()> {
                 }
                 if std::mem::take(&mut input.confirm) {
                     info!("title: play level {}", level_no + 1);
-                    (game, ghost) = fresh(level_no);
-                    rec.clear();
-                    screen = Screen::Play;
-                    snap_cam = true;
-                    recorded = false;
-                    new_best = false;
-                    input.restart = false;
-                    last_state = game.state;
-                    info!("level {}: {}", level_no + 1, game.level.name);
+                    card = Some(false);
+                }
+            }
+            Screen::Card { ending, typed } => {
+                input.menu_moves = 0;
+                input.level_step = 0;
+                input.restart = false;
+                *typed += dt * TYPE_SPEED;
+                if std::mem::take(&mut input.back) {
+                    to_title = true;
+                } else if std::mem::take(&mut input.confirm) {
+                    let total: usize = card_lines(&game, level_no, *ending).iter().map(|(l, _)| l.chars().count()).sum();
+                    if (*typed as usize) < total {
+                        *typed = total as f32; // first press finishes the typing
+                    } else if *ending {
+                        level_no = 0;
+                        to_title = true;
+                    } else {
+                        start_play = true;
+                    }
                 }
             }
             Screen::Play => {
                 input.menu_moves = 0;
                 if std::mem::take(&mut input.back) {
                     info!("back to title");
-                    game = Game::new(levels::load(level_no));
-                    ghost = None;
-                    screen = Screen::Title { pilot: Pilot::new(&game, 0), over: 0.0 };
-                    snap_cam = true;
+                    to_title = true;
                 }
                 if std::mem::take(&mut input.restart) {
                     info!("restart");
-                    (game, ghost) = fresh(level_no);
-                    rec.clear();
-                    snap_cam = true;
-                    recorded = false;
-                    new_best = false;
+                    start_play = true;
                 }
                 if std::mem::take(&mut input.confirm) {
                     match game.state {
-                        State::Won => input.level_step += 1,
+                        State::Won if level_no + 1 == levels::LEVELS.len() => {
+                            info!("all marbles recovered: ending");
+                            card = Some(true);
+                        }
+                        State::Won => {
+                            level_no += 1;
+                            game = Game::new(levels::load(level_no));
+                            card = Some(false);
+                        }
                         State::Playing => {
                             paused = !paused;
                             info!("{}", if paused { "paused" } else { "resumed" });
@@ -189,6 +236,36 @@ fn run() -> io::Result<()> {
                     input.level_step = 0;
                 }
             }
+        }
+        if let Some(ending) = card {
+            if !ending && game.level.story.is_empty() && game.level.act.is_none() {
+                start_play = true;
+            } else {
+                if !ending {
+                    game = Game::new(levels::load(level_no));
+                }
+                ghost = None;
+                screen = Screen::Card { ending, typed: 0.0 };
+                snap_cam = true;
+                info!("story card for level {}{}", level_no + 1, if ending { " (ending)" } else { "" });
+            }
+        }
+        if to_title {
+            game = Game::new(levels::load(level_no));
+            ghost = None;
+            screen = Screen::Title { pilot: Pilot::new(&game, 0), over: 0.0 };
+            snap_cam = true;
+        }
+        if start_play {
+            (game, ghost) = fresh(level_no);
+            rec.clear();
+            screen = Screen::Play;
+            snap_cam = true;
+            recorded = false;
+            new_best = false;
+            input.restart = false;
+            last_state = game.state;
+            info!("level {}: {}", level_no + 1, game.level.name);
         }
         if goto.is_some() || !matches!(screen, Screen::Play) || game.state != State::Playing {
             paused = false;
@@ -215,9 +292,12 @@ fn run() -> io::Result<()> {
         let size = terminal.size()?;
         let world_area = Rect::new(0, 0, size.width, size.height);
         let screen_push = input.push(now, view.marble_cell(&game, world_area));
-        acc = if paused { 0.0 } else { acc + dt };
+        // no time builds up while paused or reading a card, or play would start with
+        // a burst of catch-up steps
+        acc = if paused || matches!(screen, Screen::Card { .. }) { 0.0 } else { acc + dt };
         while acc >= STEP {
             let push = match &mut screen {
+                Screen::Card { .. } => break,
                 Screen::Title { pilot, .. } => pilot.push(&game),
                 Screen::Play => {
                     // quantized before it reaches the game, so the recording is exact
@@ -252,9 +332,9 @@ fn run() -> io::Result<()> {
         }
         if matches!(screen, Screen::Play) && game.state == State::Won && !recorded {
             recorded = true;
-            new_best = progress.record(levels::LEVELS[level_no].0, game.elapsed);
+            new_best = progress.record(levels::id(level_no), game.elapsed);
             if new_best {
-                ghost::save(levels::LEVELS[level_no].0, &rec);
+                ghost::save(levels::id(level_no), &rec);
             }
         }
         view.follow(cam_target(&game), dt, snap_cam);
@@ -275,9 +355,10 @@ fn run() -> io::Result<()> {
             let shade = ghost.as_ref().filter(|g| g.running() && g.game.state == State::Playing).map(|g| &g.game.marble);
             render::draw(&game, &view, shade, area, f.buffer_mut());
             match screen {
-                Screen::Title { .. } => title(&progress, level_no, area, f.buffer_mut()),
+                Screen::Title { .. } => title(&progress, &names, level_no, area, f.buffer_mut()),
+                Screen::Card { ending, typed } => story_card(&card_lines(&game, level_no, ending), typed, ending, area, f.buffer_mut()),
                 Screen::Play => {
-                    hud(&game, &input, level_no, new_best, area, f.buffer_mut());
+                    hud(&game, &input, level_no, new_best, recovered(&progress), area, f.buffer_mut());
                     if paused {
                         let msg = " PAUSED · Space or Enter to roll on · Esc menu ";
                         let w = (msg.chars().count() as u16).min(area.width);
@@ -300,34 +381,79 @@ fn run() -> io::Result<()> {
     result
 }
 
-/// The title card and level list, over the attract-mode run.
-fn title(progress: &Progress, selected: usize, area: Rect, buf: &mut Buffer) {
+/// How many levels have a best time: the marbles you have recovered so far.
+fn recovered(progress: &Progress) -> usize {
+    (0..levels::LEVELS.len()).filter(|&i| progress.best(levels::id(i)).is_some()).count()
+}
+
+/// A box of lines over the world, cleared first so the half-block cells underneath
+/// cannot bleed their colours into it.
+fn boxed(lines: Vec<Line>, area: Rect, buf: &mut Buffer) {
     let amber = Color::Rgb(255, 176, 0);
-    let grey = Color::Rgb(150, 150, 150);
     let bg = Style::default().bg(Color::Rgb(0, 0, 0));
-    let mut lines = vec![
-        Line::from(Span::styled("M A R B L E   R E C O V E R Y", bg.fg(amber).add_modifier(Modifier::BOLD))),
-        Line::from(Span::styled("something went wrong. bring it back.", bg.fg(grey))),
-        Line::from(""),
-    ];
-    for (i, (id, text)) in levels::LEVELS.iter().enumerate() {
-        let name = text.lines().find_map(|l| l.strip_prefix("name:")).map_or(*id, str::trim);
-        let best = progress.best(id).map_or("   --  ".to_string(), |t| format!("{t:6.2}s"));
-        let sel = i == selected;
-        let style = if sel { bg.fg(Color::Rgb(0, 0, 0)).bg(amber).add_modifier(Modifier::BOLD) } else { bg.fg(Color::Rgb(220, 220, 220)) };
-        lines.push(Line::from(Span::styled(format!(" {} {}  {:<22} best {} ", if sel { '>' } else { ' ' }, i + 1, name, best), style)));
-    }
-    lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled("up/down choose · Enter play · Esc in a level: back here · q quit", bg.fg(grey))));
     let w = (lines.iter().map(|l| l.width()).max().unwrap_or(0) as u16 + 6).min(area.width);
     let h = (lines.len() as u16 + 2).min(area.height);
-    let boxed = Rect { x: area.x + (area.width - w) / 2, y: area.y + area.height.saturating_sub(h) / 2, width: w, height: h };
-    Clear.render(boxed, buf);
+    let r = Rect { x: area.x + (area.width - w) / 2, y: area.y + area.height.saturating_sub(h) / 2, width: w, height: h };
+    Clear.render(r, buf);
     Paragraph::new(lines)
         .alignment(ratatui::layout::Alignment::Center)
         .style(bg)
         .block(Block::bordered().border_type(BorderType::Rounded).border_style(bg.fg(amber)).style(bg))
-        .render(boxed, buf);
+        .render(r, buf);
+}
+
+/// The title card and level list, grouped by act, over the attract-mode run.
+fn title(progress: &Progress, names: &[(String, Option<String>)], selected: usize, area: Rect, buf: &mut Buffer) {
+    let amber = Color::Rgb(255, 176, 0);
+    let grey = Color::Rgb(150, 150, 150);
+    let bg = Style::default().bg(Color::Rgb(0, 0, 0));
+    let n = levels::LEVELS.len();
+    let mut lines = vec![
+        Line::from(Span::styled("M A R B L E   R E C O V E R Y", bg.fg(amber).add_modifier(Modifier::BOLD))),
+        Line::from(Span::styled("you have lost your marbles. go and get them back.", bg.fg(grey))),
+        Line::from(Span::styled(format!("recovered {} of {n}", recovered(progress)), bg.fg(Color::Rgb(120, 190, 255)))),
+    ];
+    for (i, (name, act)) in names.iter().enumerate() {
+        let id = levels::id(i);
+        if let Some(act) = act {
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(act.clone(), bg.fg(amber))));
+        }
+        let best = progress.best(id).map_or("   --  ".to_string(), |t| format!("{t:6.2}s"));
+        let sel = i == selected;
+        let style = if sel { bg.fg(Color::Rgb(0, 0, 0)).bg(amber).add_modifier(Modifier::BOLD) } else { bg.fg(Color::Rgb(220, 220, 220)) };
+        lines.push(Line::from(Span::styled(format!(" {} {:>2}  {:<22} best {} ", if sel { '>' } else { ' ' }, i + 1, name, best), style)));
+    }
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled("up/down choose · Enter play · Esc in a level: back here · q quit", bg.fg(grey))));
+    boxed(lines, area, buf);
+}
+
+/// A story card: lines typing themselves out, then a prompt to roll on.
+fn story_card(lines: &[(String, bool)], typed: f32, ending: bool, area: Rect, buf: &mut Buffer) {
+    let amber = Color::Rgb(255, 176, 0);
+    let bg = Style::default().bg(Color::Rgb(0, 0, 0));
+    let mut left = typed as usize;
+    let total: usize = lines.iter().map(|(l, _)| l.chars().count()).sum();
+    let width = lines.iter().map(|(l, _)| l.chars().count()).max().unwrap_or(0);
+    let mut out: Vec<Line> = Vec::new();
+    for (text, heading) in lines {
+        let shown: String = text.chars().take(left).collect();
+        left = left.saturating_sub(text.chars().count());
+        let style = if *heading { bg.fg(amber).add_modifier(Modifier::BOLD) } else { bg.fg(Color::Rgb(225, 225, 225)) };
+        // pad to the full width so the box does not grow while it types
+        out.push(Line::from(Span::styled(format!("{shown:<width$}"), style)));
+    }
+    out.push(Line::from(""));
+    let prompt = if (typed as usize) < total {
+        " "
+    } else if ending {
+        "Enter: back to the menu"
+    } else {
+        "Enter to roll on · Esc to the menu"
+    };
+    out.push(Line::from(Span::styled(format!("{prompt:^width$}"), bg.fg(Color::Rgb(150, 150, 150)))));
+    boxed(out, area, buf);
 }
 
 /// `--level N` (1-based) picks the first level.
@@ -340,7 +466,7 @@ fn start_level() -> usize {
         .map_or(0, |n| n.clamp(1, levels::LEVELS.len()) - 1)
 }
 
-fn hud(game: &Game, input: &Input, level_no: usize, new_best: bool, area: Rect, buf: &mut Buffer) {
+fn hud(game: &Game, input: &Input, level_no: usize, new_best: bool, recovered: usize, area: Rect, buf: &mut Buffer) {
     let bar = Style::default().bg(Color::Rgb(0, 0, 0)).fg(Color::Rgb(255, 176, 0));
     let t = game.time_left;
     let time_style = if t < 10.0 { bar.fg(Color::Rgb(255, 60, 60)) } else { bar };
@@ -351,6 +477,7 @@ fn hud(game: &Game, input: &Input, level_no: usize, new_best: bool, area: Rect, 
         Span::styled(format!(" {}/{} {} ", level_no + 1, levels::LEVELS.len(), game.level.name), grey),
         Span::styled(format!(" TIME {t:5.1} "), time_style.add_modifier(Modifier::BOLD)),
         Span::styled(format!(" lost {} ", game.falls), grey),
+        Span::styled(format!(" recovered {recovered}/{} ", levels::LEVELS.len()), bar.fg(Color::Rgb(120, 190, 255))),
     ];
     let soak = game.marble.slime / game::SLIME_LIMIT;
     if soak > 0.02 && game.state == State::Playing {
@@ -380,7 +507,7 @@ fn hud(game: &Game, input: &Input, level_no: usize, new_best: bool, area: Rect, 
             Some(format!(" NEW BEST! RECOVERED in {:.2}s · Enter: next level · r: run again ", game.elapsed))
         }
         State::Won if level_no + 1 == levels::LEVELS.len() => {
-            Some(format!(" ALL MARBLES RECOVERED · last one in {:.2}s · Enter: back to the start · r: run again ", game.elapsed))
+            Some(format!(" THE LAST MARBLE, RECOVERED in {:.2}s · Enter: the ending · r: run again ", game.elapsed))
         }
         State::Won => Some(format!(" MARBLE RECOVERED in {:.2}s · Enter: next level · r: run again ", game.elapsed)),
         State::TimeUp => Some(" TIME UP · r to try again ".to_string()),
@@ -459,10 +586,19 @@ fn snapshot(args: &[String], out: &str) -> io::Result<()> {
     }
     eprintln!("draw: {:.2} ms per frame at {cols}x{rows}", t0.elapsed().as_secs_f64() * 1000.0 / reps as f64);
     let input = Input::new(false);
+    let names: Vec<(String, Option<String>)> = (0..levels::LEVELS.len())
+        .map(|i| {
+            let l = levels::load(i);
+            (l.name, l.act)
+        })
+        .collect();
     if args.iter().any(|a| a == "--title") {
-        title(&Progress::load(), level_no, area, &mut buf);
+        title(&Progress::load(), &names, level_no, area, &mut buf);
+    } else if args.iter().any(|a| a == "--story" || a == "--ending") {
+        let ending = args.iter().any(|a| a == "--ending");
+        story_card(&card_lines(&game, level_no, ending), 9999.0, ending, area, &mut buf);
     } else {
-        hud(&game, &input, level_no, false, area, &mut buf);
+        hud(&game, &input, level_no, false, 0, area, &mut buf);
     }
     let m = &game.marble;
     println!(

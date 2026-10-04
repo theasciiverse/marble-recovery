@@ -1,0 +1,16 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# Teaches: low gravity. Falls are long and soft, so leap off each edge and steer in
+# the air across the gaps. Too fast and you sail past the next platform.
+name: Weightless
+time: 70
+theme: madness
+gravity: 6
+story: Here, falling takes its time.
+story: Physics that should not work, does. Jump the gaps. Try not to enjoy it too much.
+route: 2,2 7,2 12,2 17,2 22,2
+grid:
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .
+.    Q    Q    Q    .    .    J    J    J    .    .    C    C    C    .    .    5    5    5    .    .    0    0    0    .
+.    QS   Q    Q    .    .    J    J    J    .    .    C    C    C    .    .    5    5    5    .    .    0    0G   0    .
+.    Q    Q    Q    .    .    J    J    J    .    .    C    C    C    .    .    5    5    5    .    .    0    0    0    .
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .

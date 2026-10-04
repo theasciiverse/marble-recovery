@@ -9,7 +9,7 @@
 //! The view direction is then (1, 1, 1), so depth (larger = nearer) is x + y + z.
 
 use crate::game::{Eater, Game, Marble, State, BULLY_RADIUS, EATER_RADIUS, RADIUS, SLIME_LIMIT};
-use crate::level::{Face, Kind, Tide};
+use crate::level::{Face, Kind, Theme, Tide};
 use crate::math::V3;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -17,11 +17,47 @@ use ratatui::style::Color;
 
 type Rgb = [f32; 3];
 
-const BG: Rgb = [6.0, 7.0, 18.0];
-const TOP: Rgb = [196.0, 198.0, 206.0];
-const GRID: Rgb = [120.0, 122.0, 136.0];
-const WALL_X: Rgb = [28.0, 86.0, 190.0];
-const WALL_Y: Rgb = [70.0, 158.0, 236.0];
+/// The colours that change with the act.
+struct Palette {
+    bg: Rgb,
+    top: Rgb,
+    grid: Rgb,
+    start: Rgb,
+    wall_x: Rgb,
+    wall_y: Rgb,
+}
+
+fn palette(t: Theme) -> Palette {
+    match t {
+        // Act I: the arcade original's grey tiles and blue cliffs
+        Theme::Classic => Palette {
+            bg: [6.0, 7.0, 18.0],
+            top: [196.0, 198.0, 206.0],
+            grid: [120.0, 122.0, 136.0],
+            start: [176.0, 196.0, 220.0],
+            wall_x: [28.0, 86.0, 190.0],
+            wall_y: [70.0, 158.0, 236.0],
+        },
+        // Act II: the madness, violet and bruised
+        Theme::Madness => Palette {
+            bg: [14.0, 4.0, 24.0],
+            top: [190.0, 180.0, 212.0],
+            grid: [122.0, 104.0, 156.0],
+            start: [206.0, 178.0, 226.0],
+            wall_x: [112.0, 36.0, 156.0],
+            wall_y: [186.0, 76.0, 206.0],
+        },
+        // Act III: recovery, a warm dawn
+        Theme::Dawn => Palette {
+            bg: [34.0, 20.0, 30.0],
+            top: [230.0, 216.0, 190.0],
+            grid: [176.0, 150.0, 122.0],
+            start: [240.0, 214.0, 170.0],
+            wall_x: [196.0, 104.0, 58.0],
+            wall_y: [238.0, 160.0, 92.0],
+        },
+    }
+}
 const MARBLE: Rgb = [70.0, 130.0, 255.0];
 const MARBLE_DARK: Rgb = [14.0, 26.0, 70.0];
 const SLIME: Rgb = [70.0, 200.0, 40.0];
@@ -122,7 +158,7 @@ fn slime_ripple(w: V3, t: f32, l: f32) -> Rgb {
     shade(mix(SLIME_DEEP, SLIME, k), 0.75 + 0.25 * l)
 }
 
-fn surface_colour(face: Face, w: V3, t: f32, tide: &Tide) -> Rgb {
+fn surface_colour(face: Face, w: V3, t: f32, tide: &Tide, pal: &Palette) -> Rgb {
     match face {
         Face::Top { kind, normal } => {
             let l = 0.5 + 0.5 * normal.dot(light()).max(0.0);
@@ -140,7 +176,7 @@ fn surface_colour(face: Face, w: V3, t: f32, tide: &Tide) -> Rgb {
                     if tide.is_wet(cx, cy, t) {
                         return slime_ripple(w, t, l);
                     }
-                    let silt = if odd { mix(SILT, GRID, 0.35) } else { SILT };
+                    let silt = if odd { mix(SILT, pal.grid, 0.35) } else { SILT };
                     let warn = tide.warning(cx, cy, t);
                     if warn > 0.0 {
                         // bubbles: sparse, fast, growing in number as the slime comes up
@@ -153,10 +189,23 @@ fn surface_colour(face: Face, w: V3, t: f32, tide: &Tide) -> Rgb {
                     silt
                 }
                 Kind::Start => {
-                    if odd { mix([176.0, 196.0, 220.0], GRID, 0.45) } else { [176.0, 196.0, 220.0] }
+                    if odd { mix(pal.start, pal.grid, 0.45) } else { pal.start }
                 }
                 Kind::Plain => {
-                    if odd { mix(TOP, GRID, 0.45) } else { TOP }
+                    if odd { mix(pal.top, pal.grid, 0.45) } else { pal.top }
+                }
+                Kind::Ice => {
+                    // pale and glossy, with a slow glint sweeping across
+                    let glint = ((w.x - w.y) * 1.3 - t * 0.9).sin().powi(16);
+                    let ice = if odd { [168.0, 214.0, 236.0] } else { [196.0, 232.0, 248.0] };
+                    return mix(shade(ice, 0.85 + 0.15 * l), [255.0, 255.0, 255.0], glint * 0.8);
+                }
+                Kind::Spring => {
+                    // concentric rings: an amber target that says "this throws you"
+                    let (fx, fy) = (frac(w.x) - 0.5, frac(w.y) - 0.5);
+                    let ring = ((fx * fx + fy * fy).sqrt() * 9.0 - t * 4.0).sin();
+                    let c = if ring > 0.0 { [250.0, 196.0, 40.0] } else { [200.0, 70.0, 30.0] };
+                    return shade(c, 0.8 + 0.2 * l);
                 }
                 Kind::Piston => {
                     // steel plates with amber caution edges, so a moving block reads as one
@@ -168,7 +217,7 @@ fn surface_colour(face: Face, w: V3, t: f32, tide: &Tide) -> Rgb {
             shade(c, l)
         }
         Face::Wall { side } => {
-            let (c, along) = if side == 0 { (WALL_X, w.y) } else { (WALL_Y, w.x) };
+            let (c, along) = if side == 0 { (pal.wall_x, w.y) } else { (pal.wall_y, w.x) };
             let stripe = if frac(along * 4.0) < 0.5 { 1.0 } else { 0.82 };
             let depth = (1.0 + w.z / 10.0).clamp(0.35, 1.0);
             shade(c, stripe * depth)
@@ -222,7 +271,8 @@ pub fn draw(game: &Game, view: &View, ghost: Option<&Marble>, area: Rect, buf: &
         return;
     }
     let (ox, oy) = view.origin(area);
-    let mut px = vec![Px { col: BG, depth: f32::NEG_INFINITY, world: V3::ZERO, top: false }; w * h];
+    let pal = palette(game.level.theme);
+    let mut px = vec![Px { col: pal.bg, depth: f32::NEG_INFINITY, world: V3::ZERO, top: false }; w * h];
 
     // 1. world, z-buffered
     for t in game.level.all_tris() {
@@ -265,7 +315,7 @@ pub fn draw(game: &Game, view: &View, ghost: Option<&Marble>, area: Rect, buf: &
                 }
                 let world = t.v[0] * w0 + t.v[1] * w1 + t.v[2] * w2;
                 *cell = Px {
-                    col: surface_colour(t.face, world, game.clock, &game.level.tide),
+                    col: surface_colour(t.face, world, game.clock, &game.level.tide, &pal),
                     depth,
                     world,
                     top: matches!(t.face, Face::Top { .. }),

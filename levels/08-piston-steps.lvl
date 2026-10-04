@@ -5,6 +5,9 @@
 # the last lift in the far corner, not on the straight line.
 name: Piston Steps
 time: 70
+theme: madness
+story: The floor has opinions now. It goes up. It goes down.
+story: Your marble is up there, where the floor goes highest.
 piston: 4 1.5 0.45
 eater: 7,1 9,1 speed 0.8 chase 1.25
 route: 2,2 3,2 5,2 6,2 7,2 9,2 10,2 12,2

@@ -1,0 +1,27 @@
+# Original Marble Recovery level (2026-10-04). Not derived from any Marble Madness course.
+# The finale: a slime zig-zag, an ice slide onto a gulper's landing, a tidal strip,
+# and a spring up to the last socket. Everything once more, in the warm light.
+name: The Long Way Home
+time: 90
+theme: dawn
+tide: 6 0.4 -0.2
+eater: 7,10 10,10 speed 0.9 chase 1.2
+story: The last one. It knows the way home, even if you do not.
+story: Everything you have learned is down there somewhere. Follow it.
+ending: Twelve marbles. Every one of them accounted for.
+ending: It was never really madness. Just a long way round.
+ending: Welcome back.
+route: 2,2 6,2 6,3 8,3 8,5 8,7 10,7 16,7 17,7 19,7
+grid:
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .
+.    K    K    K    K>   J>   I    I~   I    I    .    .    .    .    .    .    .    .    .    .    .    .
+.    KS   K    K    K>   J>   I    I~   I    I~   .    .    .    .    .    .    .    .    .    .    .    .
+.    K    K    K    K>   J>   I    I    I    I~   .    .    .    .    .    .    .    .    .    .    .    .
+.    .    .    .    .    .    .    .    Iv*  Iv*  .    .    .    .    .    .    .    .    .    .    .    .
+.    .    .    .    .    .    .    .    Hv*  Hv*  .    .    .    .    .    .    .    .    .    .    .    .
+.    .    .    .    .    .    .    G    G    G    G    .    .    .    .    .    G    G    K    K    K    .
+.    .    .    .    .    .    .    G    G    G    G    G%   G%   G%   G%   G%   G    G!   K    KG   K    .
+.    .    .    .    .    .    .    G    G    G    G    G%   G%   G%   G%   G%   G    G    K    K    K    .
+.    .    .    .    .    .    .    G    G    G    G    .    .    .    .    .    G    G    K    K    K    .
+.    .    .    .    .    .    .    G    G    G    G    .    .    .    .    .    .    .    .    .    .    .
+.    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .    .

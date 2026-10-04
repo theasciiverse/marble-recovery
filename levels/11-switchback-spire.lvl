@@ -3,6 +3,10 @@
 # of the first landing (brake, or meet it), a slime chicane on the last bridge, then a two-unit drop to the socket.
 name: Switchback Spire
 time: 70
+theme: dawn
+act: Act III: Recovery
+story: Things are starting to make sense again.
+story: The light is warmer here. The way down is long, but it is a way.
 eater: 10,1 10,3 speed 0.8 chase 1.3
 route: 2,2 5,2 7,2 7,4 7,7 7,8 8,9 12,9 13,9 14,11 13,12 14,13 14,14 14,15 14,16
 grid:

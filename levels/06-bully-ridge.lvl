@@ -4,6 +4,9 @@
 # let them roll off, or lead them round the hole in the plaza.
 name: Bully Ridge
 time: 70
+theme: madness
+story: Iron marbles. Heavy, proud, and not very bright.
+story: They will come straight at you. They will not look where they are going.
 bully: 11,1 chase 3
 bully: 11,7 chase 3.5
 bully: 15,4 chase 3.5

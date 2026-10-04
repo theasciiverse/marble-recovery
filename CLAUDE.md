@@ -124,6 +124,25 @@ curated terminal gaming platform, non-commercial or revenue-share model.
 - [ ] Rights: optional, not a blocker for an original-IP successor; stay clear of
       the name, the original level layouts and the enemy designs
 
+## Story arc
+
+The pun carries the story: to lose your marbles is to go mad, and you recover
+them. Twelve marbles are lost; each level recovers one. Three acts, each with its
+own palette (`theme:` in the level file) and its own relationship with physics:
+
+- **Act I: Losing It** (levels 1 to 4, `classic`): the arcade original's grey tiles
+  and blue cliffs. Normal rules.
+- **Act II: The Madness** (5 to 10, `madness`): violet. The rules bend: ice, springs,
+  low gravity ("physics that shouldn't work, does").
+- **Act III: Recovery** (11 to 12, `dawn`): warm light, the way home.
+
+A story card types itself out before each level when you arrive from the title or
+from the previous win (`n`/`p` skip straight past), with the act heading on the
+first level of each act, and the last level's `ending:` lines play after it. The
+voice is wry and warm and plays on the idiom, never clinical. All the text lives in
+the level files (`act:`, `story:`, `ending:`), so it can be rewritten without code.
+"Recovered N of 12" (levels with a best time) shows on the title and in the HUD.
+
 ## Levels and hazards
 
 **Every shipped level is an original design** (authored 2026-10-04 onward), not a
@@ -136,8 +155,21 @@ Format (`levels/*.lvl`, documented in `src/level.rs`): `name:`, `time:`, any num
 (`bully: 11,1 chase 3`), an optional `tide: period wet lag`, one or more `route:`
 lines (cells to roll through, `w2.5` = wait 2.5 s), then `grid:` with one token per
 cell (height in half units 0-9 A-Z, then modifiers: `> < v ^` slopes, `S` start, `G`
-goal, `~` slime, `%` tidal slime, `|` piston, `.` void), with an optional
-`piston: period rise lag` for piston timing.
+goal, `~` slime, `%` tidal slime, `|` piston, `*` ice, `!` spring, `.` void),
+with optional `piston: period rise lag`, `gravity:` (default 18), `spring:` (launch
+speed, default 9.5), and the story headers above.
+
+**Level ids are the file name without its order number** (`08-piston-steps.lvl` is
+`piston-steps`), so reordering levels never orphans best times or ghosts. Saved
+data from before that is migrated on load (it was keyed with the number, and the
+2026-10-04 reshuffle into acts briefly orphaned David's Piston Steps and Spire
+times until this was fixed).
+
+**The route lab** designs routes: `MR_LEVEL=7 MR_ROUTE="2,2 w? 10,2 ..." cargo test
+--release route_lab -- --ignored --nocapture` plays a route, searches every `w?`
+wait, and reports the outcome plus hazard pressure (soak, closest gulper and bully,
+hunting time). Also test the careless line (full push, `--push` in a snapshot): a
+level whose careful route passes is only interesting if careless play fails.
 
 The level grids were first laid out with a small generator script (aligned columns);
 the `.lvl` files are the source of truth now, edit them directly.
@@ -168,7 +200,13 @@ Hazards:
   faces and their neighbours' walls each step (`Level::set_clock`). On their own
   they are safe (push against a lift's wall and it comes level), so a piston level
   needs another pressure; Piston Steps puts a gulper on the last landing.
-- **Hard landings** shatter at 10.5 u/s normal impact (a drop of about 3 units).
+- **Ice** (`*`): 30% push and almost no drag; you coast and steering bites late.
+- **Springs** (`!`): throw anything that lands on them (bullies too) up at the
+  level's `spring:` speed, once per landing. Hold toward the next terrace in the air.
+- **Gravity** (`gravity:`): per level. At 6, falls are long and soft and you steer
+  across gaps in the air; a careless full push still sails past and shatters.
+- **Hard landings** shatter at 10.5 u/s normal impact (a drop of about 3 units at
+  normal gravity).
 
 **Respawn points are never inside a hazard's reach.** A cell within a gulper's
 patrol or a bully's home range (plus both radii and a margin) is never chosen, so a
@@ -187,21 +225,26 @@ with the player at the player's speed). Probe peak slime soak, gulper and bully
 closest approach, and hunting/anger time along each route; a hazard with zero
 pressure is decoration. Low Tide's waits were then found by searching, not guessed.
 
-Level slate:
-1. First Descent: ramp, tilted bridge, safe drop
+Level slate (file order is play order):
+1. First Descent (Act I): ramp, tilted bridge, safe drop
 2. Slime Terraces: three terraces, one clean winding line across each
 3. The Gulper Yard: an open yard, a patrolling gulper, a hunter, a sentinel
 4. Low Tide: a tidal flat with the wave rolling at you; a straight dash dissolves,
    wait on the start (about 1 s) and two islands (about 4 s and 6 s)
-5. Gulper Bog: two contested dry causeways, or unguarded stepping stones that only
-   meet at their corners (measured: guarded lines get near misses at 0.6 to 0.9 units,
-   the stones keep 2 units clear)
+5. Gulper Bog (Act II): two contested dry causeways, or unguarded stepping stones
+   that only meet at their corners (guarded lines: near misses at 0.6 to 0.9 units)
 6. Bully Ridge: a bully charging along a two-wide ridge, two more in a plaza with a
-   hole to lure them into (measured: contact made, two bullies fell off chasing)
-7. Piston Steps: the socket is 4.5 units up, three phased lifts are the only way;
-   wait for the last lift in the far corner, or on the centre line where the
-   gulper gets you after about 3 s (timings found by searching 16 x 2 cases)
-8. Switchback Spire: long descent, a guard punishing overshoot, slime chicane
+   hole to lure them into (contact made, two bullies fell off chasing)
+7. Thin Ice: ice runs between grippy corner pads, void all round
+8. Piston Steps: the socket is 4.5 units up, three phased lifts are the only way;
+   wait for the last lift in the far corner, or the gulper gets you after about 3 s
+9. Spring Fever: springs up three terraces; the careless line loses a marble
+10. Weightless: gravity 6, leap the gaps and steer in the air; full push sails past
+    and shatters
+11. Switchback Spire (Act III): long descent, a guard punishing overshoot, slime
+12. The Long Way Home: slime zig-zag, an ice slide onto a gulper's landing (first
+    draft: the slide was too fast to stop before the gulper; shortened, pad
+    deepened), a tidal strip (peak soak 0.99 of 1.5), a spring to the last socket
 
 ## Reference sources
 
@@ -236,9 +279,10 @@ Playable (2026-10-04): title screen with level select and best times (saved to
 ghost of your best run on each level to race (`.../marble-recovery/ghosts/`, inputs
 per physics step, quantized so replay is bit-exact; bump `FORMAT` in `ghost.rs`
 whenever physics changes, or old ghosts drift), an attract mode playing the
-highlighted level's proof route behind the menu, pause (Space), eight
-original levels, slime, tidal slime, pistons, gulpers, bullies, shatter, timer, camera that
-looks ahead along your motion, session logging per the Asciiverse convention. 20
+highlighted level's proof route behind the menu, pause (Space), twelve
+original levels in a three-act story with story cards and an ending, slime, tidal
+slime, pistons, ice, springs, per-level gravity, gulpers, bullies, shatter, timer, camera that
+looks ahead along your motion, session logging per the Asciiverse convention. 23
 tests: every level route completes with zero losses, each hazard mechanic, the
 best-times file, and bit-exact ghost replay on every level. Own git repo, private
 at github.com/theasciiverse/marble-recovery.

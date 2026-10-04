@@ -63,8 +63,19 @@ pub fn save(id: &str, pushes: &[Push]) {
     }
 }
 
+/// The ghost for a level id, also finding files saved before ids were stable, which
+/// carry the level's order number ("07-piston-steps.txt").
 pub fn load(id: &str) -> Option<Vec<Push>> {
-    decode(&std::fs::read_to_string(path(id)?).ok()?)
+    let p = path(id)?;
+    if let Ok(text) = std::fs::read_to_string(&p) {
+        return decode(&text);
+    }
+    let dir = p.parent()?;
+    std::fs::read_dir(dir)
+        .ok()?
+        .flatten()
+        .filter(|e| e.path().file_stem().and_then(|s| s.to_str()).is_some_and(|s| crate::levels::strip_order(s) == id))
+        .find_map(|e| decode(&std::fs::read_to_string(e.path()).ok()?))
 }
 
 /// A replaying run, stepped in lockstep with the player's game.
