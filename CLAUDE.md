@@ -240,7 +240,8 @@ highlighted level's proof route behind the menu, pause (Space), eight
 original levels, slime, tidal slime, pistons, gulpers, bullies, shatter, timer, camera that
 looks ahead along your motion, session logging per the Asciiverse convention. 20
 tests: every level route completes with zero losses, each hazard mechanic, the
-best-times file, and bit-exact ghost replay on every level. Not a git repo yet.
+best-times file, and bit-exact ghost replay on every level. Own git repo, private
+at github.com/theasciiverse/marble-recovery.
 
 ```bash
 cargo run --release                       # title screen
