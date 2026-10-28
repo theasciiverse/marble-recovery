@@ -266,7 +266,7 @@ Better sources found 2026-10-04 (licenses checked against the repos):
 
 ## Catalog position
 
-Marble Recovery sits alongside Aurora (the ski game) as the contemplative
+Marble Recovery sits alongside Skare (the ski game) as the contemplative
 physics experiences in the catalog. Not twitchy, not strategic — pure spatial
 reasoning and momentum feel. Different emotional register from Entity or
 Bob-sleigh. The player who loves Marble Recovery is not necessarily the same
