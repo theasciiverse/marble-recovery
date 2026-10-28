@@ -264,14 +264,6 @@ Better sources found 2026-10-04 (licenses checked against the repos):
 - Mark Cerny, Classic Game Postmortem: Marble Madness, GDC 2011 (free on GDC Vault).
 - IsometricBlocks, github.com/shaunlebron/IsometricBlocks (ISC): draw-order sorting.
 
-## Catalog position
-
-Marble Recovery sits alongside Skare (the ski game) as the contemplative
-physics experiences in the catalog. Not twitchy, not strategic — pure spatial
-reasoning and momentum feel. Different emotional register from Entity or
-Bob-sleigh. The player who loves Marble Recovery is not necessarily the same
-player who loves Tetrix.
-
 ## Status
 
 Playable (2026-10-04): title screen with level select and best times (saved to
